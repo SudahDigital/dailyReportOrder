@@ -5,8 +5,10 @@ namespace App\Exports;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterSheet;
 
-class dailyReport implements FromCollection, WithMapping, WithHeadings
+class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEvents
 {
     /**
     * @return \Illuminate\Support\Collection
@@ -31,6 +33,7 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings
                         $query->where('spv_id',$idSpv);
                     })
                     ->get(['orders.customer_id AS customerId',
+                            'orders.user_loc AS UserLoc',
                             'orders.id AS orderId',
                             'orders.created_at AS orderCreate',
                             'users.name AS userName', 
@@ -48,15 +51,21 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings
             $storeCode = $orders->customers->store_code;
             $storeName = $orders->customers->store_name;
             $totalQuantity = $orders->totalQuantity;
+            $dateOrder = date('F j, Y', strtotime($user->orderCreate));
+            $tiemOrder = date('H:i', strtotime($user->orderCreate));
         }else{
             $storeCode = '';
             $storeName = '';
             $totalQuantity = '';
+            $dateOrder = '';
+            $tiemOrder = '';
         }
 
         return[
             $user->userName,
-            $user->orderCreate,
+            $dateOrder,
+            $tiemOrder,
+            $user->UserLoc,
             $storeCode,
             $storeName,
             $totalQuantity,
@@ -69,12 +78,27 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings
     public function headings() : array {
         return [
             'Sales',
-            'Date',
+            'Order Date',
+            'Order Time', 
+            'ON/OFF Loc.',
             'Cust-Code',
             'Customer',
             'Order Qty (Dus)',
             'Status',
         ] ;
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class    => function(AfterSheet $event) {
+   
+                $event->sheet->getDelegate()->getStyle('A1:H1')
+                                ->getFont()
+                                ->setBold(true);
+   
+            },
+        ];
     }
 
     function getOrder($id){

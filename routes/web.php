@@ -19,4 +19,4 @@ Route::get('/', function () {
 });
 
 Route::get('/testmail', [SendReportDailyController::class,'index']);
-Route::get('/testquery', [SendReportDailyController::class,'test']);
+//Route::get('/testquery', [SendReportDailyController::class,'test']);
