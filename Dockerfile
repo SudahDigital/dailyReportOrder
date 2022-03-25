@@ -109,12 +109,6 @@ RUN echo $AWS_KEY:$AWS_SECRET_KEY > /root/.passwd-s3fs && \
 RUN composer install --optimize-autoloader --no-dev
 RUN chmod +x /var/www/docker/run.sh
 
-# Crontab
-RUN echo "* * * * * root php /var/www/artisan schedule:run >> /var/log/cron.log 2>&1" >> /etc/crontab
-
-# Create the log file to be able to run tail
-RUN touch /var/log/cron.log
-
 RUN chown -R root:root vendor
 RUN chown -R root:root storage/logs/
 RUN chmod -R 777 /var/www/storage/framework/sessions
