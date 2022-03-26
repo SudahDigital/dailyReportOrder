@@ -122,6 +122,7 @@ RUN chown -R root:root storage/logs/
 RUN chmod -R 777 /var/www/storage/framework/sessions
 RUN chmod -R 777 /var/www/storage/framework/views
 RUN chmod -R 777 /var/www/storage/framework/cache
+RUN chmod -R 777 /var/www/storage/logs
 #RUN chmod -R 777 /var/www/storage/framework/laravel-excel
 
 EXPOSE 443
