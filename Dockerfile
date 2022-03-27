@@ -111,11 +111,20 @@ WORKDIR /var/www
 RUN composer install --optimize-autoloader --no-dev
 RUN chmod +x /var/www/docker/run.sh
 
-#crontab
-RUN echo "* * * * * root php /var/www/artisan schedule:run >> /var/log/cron.log 2>&1" >> /etc/crontab
+# Copy crontab file to the cron.d directory
+COPY crontab /etc/cron.d/crontab
+
+# Give execution rights on the cron job
+RUN chmod 0644 /etc/cron.d/crontab
+
+# Apply cron job
+RUN crontab /etc/cron.d/crontab
 
 # Create the log file to be able to run tail
 RUN touch /var/log/cron.log
+
+# Run the command on container startup
+CMD cron && tail -f /var/log/cron.log
 
 RUN chown -R root:root vendor
 RUN chown -R root:root storage/logs/
