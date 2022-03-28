@@ -118,18 +118,10 @@ RUN chmod -R 777 /var/www/storage/framework/views
 RUN chmod -R 777 /var/www/storage/framework/cache
 #RUN chmod -R 777 /var/www/storage/framework/laravel-excel
 
-# Install cron.
-RUN apt-get update && apt-get install cron -y
+RUN echo "* * * * * root php /var/www/artisan schedule:run >> /var/log/cron.log 2>&1" >> /etc/crontab
 
-# Set up the scheduler for Laravel.
-COPY laravel-scheduler /etc/cron.d/
-RUN chmod 0644 /etc/cron.d/laravel-scheduler
-
-# Copy the start script.
-COPY docker-entrypoint.sh /usr/local/bin/
-
-# Start the service.
-CMD ["php-fpm"]
+# Create the log file to be able to run tail
+RUN touch /var/log/cron.log
 
 EXPOSE 443
-ENTRYPOINT ["/var/www/docker/run.sh","docker-entrypoint.sh"]
+ENTRYPOINT ["/var/www/docker/run.sh"]
