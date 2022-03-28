@@ -6,7 +6,7 @@ cd /var/www
 
 /usr/bin/supervisord -c /etc/supervisord.conf
 
-cd /var/www
+#cd /var/www
 # php artisan migrate:fresh --seed
 php artisan cache:clear
 php artisan route:cache
