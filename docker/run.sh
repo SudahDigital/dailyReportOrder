@@ -8,10 +8,11 @@ cd /var/www
 php artisan cache:clear
 php artisan route:cache
 php artisan storage:link
-#php artisan schedule:work
 #php artisan migrate
 
 
 /usr/bin/supervisord -c /etc/supervisord.conf
 chown -R root:root storage/
 chmod -R 777 storage/
+
+php artisan schedule:work
