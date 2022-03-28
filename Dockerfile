@@ -111,11 +111,16 @@ WORKDIR /var/www
 RUN composer install --optimize-autoloader --no-dev
 RUN chmod +x /var/www/docker/run.sh
 
+
 RUN chown -R root:root vendor
 RUN chown -R root:root storage/logs/
+RUN chown -R root:root storage/
+RUN chmod -R 777 /var/www/storage/
 RUN chmod -R 777 /var/www/storage/framework/sessions
 RUN chmod -R 777 /var/www/storage/framework/views
 RUN chmod -R 777 /var/www/storage/framework/cache
+
+
 #RUN chmod -R 777 /var/www/storage/framework/laravel-excel
 
 RUN echo "* * * * * root php /var/www/artisan schedule:run >> /var/log/cron.log 2>&1" >> /etc/crontab
