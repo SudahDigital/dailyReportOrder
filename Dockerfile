@@ -118,10 +118,10 @@ RUN chmod -R 777 /var/www/storage/framework/views
 RUN chmod -R 777 /var/www/storage/framework/cache
 #RUN chmod -R 777 /var/www/storage/framework/laravel-excel
 
-RUN echo "* * * * * root php /var/www/artisan schedule:run >> /var/log/cron.log 2>&1" >> /etc/crontab
+#RUN echo "* * * * * root php /var/www/artisan schedule:run >> /var/log/cron.log 2>&1" >> /etc/crontab
 
 # Create the log file to be able to run tail
-RUN touch /var/log/cron.log
+#RUN touch /var/log/cron.log
 
 EXPOSE 443
 ENTRYPOINT ["/var/www/docker/run.sh"]
