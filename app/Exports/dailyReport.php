@@ -96,6 +96,8 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
                 $event->sheet->getDelegate()->getStyle('A1:H1')
                                 ->getFont()
                                 ->setBold(true);
+                $event->sheet->getDelegate()
+                                ->setAutoFilter('A1:'.$event->sheet->getDelegate()->getHighestColumn().'1');
    
             },
         ];

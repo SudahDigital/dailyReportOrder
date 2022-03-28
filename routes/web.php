@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\SendReportDailyController;
+//use App\Http\Controllers\SendReportDailyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,8 +15,9 @@ use App\Http\Controllers\SendReportDailyController;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    //return view('welcome');
+    abort(404, 'Tidak ditemukan');
 });
 
-Route::get('/testmail', [SendReportDailyController::class,'index']);
+//Route::get('/testmail', [SendReportDailyController::class,'index']);
 //Route::get('/testquery', [SendReportDailyController::class,'test']);
