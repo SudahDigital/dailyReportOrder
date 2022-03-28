@@ -111,34 +111,25 @@ WORKDIR /var/www
 RUN composer install --optimize-autoloader --no-dev
 RUN chmod +x /var/www/docker/run.sh
 
-# Install cron.
-RUN apt-get update && apt-get install cron -y
-
-# Copy crontab file to the cron.d directory
-COPY crontab /etc/cron.d/crontab
-
-# masuk sebagai root
-USER root
-
-# Give execution rights on the cron job
-RUN chmod 0644 /etc/cron.d/crontab
-
-# Apply cron job
-RUN crontab /etc/cron.d/crontab
-
-# Create the log file to be able to run tail
-RUN touch /var/log/cron.log
-
-# Run the command on container startup
-CMD cron && tail -f /var/log/cron.log
-
 RUN chown -R root:root vendor
 RUN chown -R root:root storage/logs/
 RUN chmod -R 777 /var/www/storage/framework/sessions
 RUN chmod -R 777 /var/www/storage/framework/views
 RUN chmod -R 777 /var/www/storage/framework/cache
-RUN chmod -R 777 /var/www/storage/logs
 #RUN chmod -R 777 /var/www/storage/framework/laravel-excel
 
+# Install cron.
+RUN apt-get update && apt-get install cron -y
+
+# Set up the scheduler for Laravel.
+COPY laravel-scheduler /etc/cron.d/
+RUN chmod 0644 /etc/cron.d/laravel-scheduler
+
+# Copy the start script.
+COPY docker-entrypoint.sh /usr/local/bin/
+
+# Start the service.
+CMD ["php-fpm"]
+
 EXPOSE 443
-ENTRYPOINT ["/var/www/docker/run.sh"]
+ENTRYPOINT ["/var/www/docker/run.sh","docker-entrypoint.sh"]
