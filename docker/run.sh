@@ -15,6 +15,7 @@ php artisan storage:link
 chown -R root:root storage/
 chmod -R 777 storage/
 
+cd /var/www
 php artisan schedule:work
 
 
