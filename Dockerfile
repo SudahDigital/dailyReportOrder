@@ -112,7 +112,7 @@ RUN composer install --optimize-autoloader --no-dev
 RUN chmod +x /var/www/docker/run.sh
 
 # Install cron.
-RUN apt install cron
+RUN apt-get update && apt-get install cron -y
 
 # Copy crontab file to the cron.d directory
 COPY crontab /etc/cron.d/crontab
