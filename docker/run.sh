@@ -13,10 +13,3 @@ php artisan storage:link
 
 /usr/bin/supervisord -c /etc/supervisord.conf
 
-# Run scheduler
-while [ true ]
-do
-  php artisan schedule:run --verbose --no-interaction
-  sleep 60
-done
-

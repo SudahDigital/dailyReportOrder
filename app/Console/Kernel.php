@@ -16,7 +16,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
-        $schedule->call('App\Http\Controllers\SendReportDailyController@index')->daily()->at('08:40');
+        $schedule->call('App\Http\Controllers\SendReportDailyController@index')->daily()->at('09:12');
         //$schedule->command('App\Http\Controllers\SendReportDailyController@index')->everyMinute();
     }
 
