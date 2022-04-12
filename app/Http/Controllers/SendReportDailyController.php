@@ -21,6 +21,7 @@ class SendReportDailyController extends Controller
             \Mail::send('dailyMail',['spvName'=>$spvName,'dateString'=>$dateString], 
                         function ($message) use ($spvId,$email_spv,$dateString) {
                                 $message->to($email_spv)
+                                        ->cc('admin@sudahdigital.com')
                                         ->subject('Daily Report '.$dateString);
                                         //->setBody($emailDetail, 'text/html');
                                 $message->attach(
