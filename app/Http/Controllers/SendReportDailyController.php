@@ -13,24 +13,46 @@ class SendReportDailyController extends Controller
                 ->where('status','ACTIVE')
                 ->get();
         $dateNow = date('Y-m-d');
-        $dateString = date('d F Y', strtotime($dateNow));
+        //$dateString = date('d F Y', strtotime($dateNow));
         foreach($userSpv as $spv){
             $email_spv = $spv->email;
             $spvId = $spv->id;
             $spvName = $spv->name;
-            \Mail::send('dailyMail',['spvName'=>$spvName,'dateString'=>$dateString], 
+            $today = date('w', strtotime($dateNow));
+            if($today == '0'){
+                $begin = date('Y-m-d', strtotime('-6 day', strtotime($dateNow)));
+                $end = date('Y-m-d', strtotime('-1 day', strtotime($dateNow)));
+                $dateString = $begin.' - ' .$end;
+                \Mail::send('dailyMail',['spvName'=>$spvName,'dateString'=>$dateString], 
                         function ($message) use ($spvId,$email_spv,$dateString) {
                                 $message->to($email_spv)
                                         ->cc('admin@sudahdigital.com')
-                                        ->subject('Daily Report '.$dateString);
+                                        ->subject('Summary Daily Report '.$dateString);
                                         //->setBody($emailDetail, 'text/html');
                                 $message->attach(
                                     Excel::download(
                                         new dailyReport($spvId), 
-                                        'Daily Report '.$dateString.'.xlsx'
-                                    )->getFile(), ['as' => 'Daily Report '.$dateString.'.xlsx']
+                                        'Summary Daily Report '.$dateString.'.xlsx'
+                                    )->getFile(), ['as' => 'Summary Daily Report '.$dateString.'.xlsx']
                                 );
-            });
+                        });
+            }else{
+                $dateString = date('d F Y', strtotime($dateNow));
+                \Mail::send('dailyMail',['spvName'=>$spvName,'dateString'=>$dateString], 
+                            function ($message) use ($spvId,$email_spv,$dateString) {
+                                    $message->to($email_spv)
+                                            ->cc('admin@sudahdigital.com')
+                                            ->subject('Daily Report '.$dateString);
+                                            //->setBody($emailDetail, 'text/html');
+                                    $message->attach(
+                                        Excel::download(
+                                            new dailyReport($spvId), 
+                                            'Daily Report '.$dateString.'.xlsx'
+                                        )->getFile(), ['as' => 'Daily Report '.$dateString.'.xlsx']
+                                    );
+                });
+            }
+            
         }
     }
 

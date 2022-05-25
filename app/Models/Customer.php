@@ -23,4 +23,8 @@ class Customer extends Model
         return $this->belongsTo(Spv_sales::class,'user_id','sls_id');
     }
 
+    public function store_targets(){
+        return $this->hasMany(Store_Targets::class,'customer_id');
+    }
+
 }
