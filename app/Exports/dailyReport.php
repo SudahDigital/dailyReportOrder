@@ -83,7 +83,7 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
                     $dateOrder = '';
                     $tiemOrder = '';
                     $custTarget = '';
-                    $notes = 'Doesn\'t have order at '.$dt->format('Y-m-d');
+                    $notes = 'Doesn\'t have record at '.$dt->format('Y-m-d');
                     $status = '';
                     $userLoc = '';
                 }
