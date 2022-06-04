@@ -12,6 +12,7 @@ class SendReportDailyController extends Controller
         $userSpv = \App\Models\User::where('roles','SUPERVISOR')
                 ->where('status','ACTIVE')
                 ->get();
+        //dd($userSpv);
         $dateNow = date('Y-m-d');
         //$dateString = date('d F Y', strtotime($dateNow));
         foreach($userSpv as $spv){

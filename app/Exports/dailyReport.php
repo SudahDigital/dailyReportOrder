@@ -30,6 +30,7 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
             $user = \App\Models\User::whereHas('sls_exists',function ($query) use ($idSpv){
                             $query->where('spv_id',$idSpv);
                         })
+                        ->where('users.status','ACTIVE')
                         ->get();
         }
         else{
@@ -43,6 +44,7 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
                     ->whereHas('sls_exists',function ($query) use ($idSpv){
                         $query->where('spv_id',$idSpv);
                     })
+                    ->where('users.status','ACTIVE')
                     ->get(['orders.customer_id AS customerId',
                             'orders.user_loc AS UserLoc',
                             'orders.id AS orderId',
@@ -55,6 +57,7 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
 
     public function map($user) : array {
         $rows = [];
+        //dd($user);
         $date_now = date('Y-m-d');
         $today = date('w', strtotime($date_now));
         if($today == '0'){
@@ -64,75 +67,180 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
             $interval = DateInterval::createFromDateString('1 day');
             $period = new DatePeriod(new DateTime($begin), $interval, new DateTime($end));
             foreach ($period as $dt) {
+                
                 $orders = $this->getResumeOrder($user->id,$dt->format('Y-m-d'));
-                //orders check
                 if($orders){
-                    $custTarget = $this->getResumeTargetItem($orders->customer_id,$dt->format('Y-m-d'));
-                    $storeCode = $orders->customers->store_code;
-                    $storeName = $orders->customers->store_name;
-                    $totalQuantity = $orders->totalQuantity;
-                    $dateOrder = date('F j, Y', strtotime($orders->created_at));
-                    $tiemOrder = date('H:i', strtotime($orders->created_at));
-                    $notes = '';
-                    $status = $orders->status;
-                    $userLoc = $orders->user_loc;
-                }else{
-                    $storeCode = '';
-                    $storeName = '';
-                    $totalQuantity = '';
-                    $dateOrder = '';
-                    $tiemOrder = '';
-                    $custTarget = '';
-                    $notes = 'Doesn\'t have record at '.$dt->format('Y-m-d');
-                    $status = '';
-                    $userLoc = '';
-                }
+                    foreach($orders as $odr){
+                            //$lastOrder = 
+                            $storeCode = $odr->customers->store_code;
+                            $storeName = $odr->customers->store_name;
+                            $dateOrder = date('F j, Y', strtotime($odr->created_at));
+                            $timeOrder = date('H:i', strtotime($odr->created_at));
+                            $status = $odr->status;
+                            $userLoc = $odr->user_loc;
+                            if($odr->status == 'NO-ORDER'){
+                                $notes = $odr->notes_no_order;
+                            }else if($odr->status == 'CANCEL'){
+                                $notes = $odr->notes_cancel;
+                            }else{
+                                $notes = $odr->notes;
+                            }
 
-                array_push($rows,[
-                    $user->name,
-                    $dateOrder,
-                    $tiemOrder,
-                    $userLoc,
-                    $storeCode,
-                    $storeName,
-                    $totalQuantity,
-                    $custTarget,
-                    $status,
-                    $notes
-                ]);
-            }
+                        foreach($odr->products as $op){
+                            [$custTarget,$targetItem]= $this->getResumeTargetItem($odr->customer_id,$op->pivot->product_id,$dt->format('Y-m-d'));
+                            
+                            $qty = $op->pivot->quantity;
+                            
+                            if($odr->status == 'NO-ORDER'){
+                                $product_name = '';
+                            }else{
+                                $product_name = $op->Product_name;
+                            }
+                            array_push($rows,[
+                                $user->name,
+                                $dateOrder,
+                                $timeOrder,
+                                $userLoc,
+                                $storeCode,
+                                $storeName,
+                                $product_name,
+                                $qty,
+                                $op->pivot->paket_id,
+                                $op->pivot->group_id,
+                                $op->pivot->bonus_cat,
+                                $targetItem,
+                                $custTarget,
+                                $status,
+                                $notes
+                            ]);
+                        }
+                    }
+                }else{
+                        $storeCode = '';
+                        $storeName = '';
+                        //$totalQuantity = '';
+                        $product_name = '';
+                        $qty = '';
+                        $paket_id = '';
+                        $bonus_id = '';
+                        $bonus_item = '';
+                        $dateOrder = '';
+                        $timeOrder = '';
+                        $custTarget = '';
+                        $targetItem = '';
+                        $notes = 'Doesn\'t have record at '.$dt->format('Y-m-d');
+                        $status = '';
+                        $userLoc = '';
+
+                        
+                        array_push($rows,[
+                            $user->name,
+                            $dateOrder,
+                            $timeOrder,
+                            $userLoc,
+                            $storeCode,
+                            $storeName,
+                            $product_name,
+                            $qty,
+                            $paket_id,
+                            $bonus_id,
+                            $bonus_item,
+                            $targetItem,
+                            $custTarget,
+                            $status,
+                            $notes
+                        ]);
+                    }
+                }
+            
         }else{
             $orders = $this->getOrder($user->orderId);
         
             //orders check
             if($orders){
-                $custTarget = $this->getTargetItem($user->customerId);
+                
                 $storeCode = $orders->customers->store_code;
                 $storeName = $orders->customers->store_name;
-                $totalQuantity = $orders->totalQuantity;
+                //$totalQuantity = $orders->totalQuantity;
                 $dateOrder = date('F j, Y', strtotime($user->orderCreate));
-                $tiemOrder = date('H:i', strtotime($user->orderCreate));
+                $timeOrder = date('H:i', strtotime($user->orderCreate));
+                if($user->status == 'NO-ORDER'){
+                    $notes = $orders->notes_no_order;
+                }else if($user->status == 'CANCEL'){
+                    $notes = $orders->notes_cancel;
+                }else{
+                    $notes = $orders->notes;
+                }
+                foreach($orders->products as $op){
+                    [$custTarget,$targetItem] = $this->getTargetItem($user->customerId, $op->pivot->product_id);
+                    $qty = $op->pivot->quantity;
+                    if($user->status == 'NO-ORDER'){
+                        $product_name = '';
+                    }else{
+                        $product_name = $op->Product_name;
+                    }
+
+                    array_push($rows,[
+                        $user->userName,
+                        $dateOrder,
+                        $timeOrder,
+                        $user->UserLoc,
+                        $storeCode,
+                        $storeName,
+                        $product_name,
+                        $qty,
+                        $op->pivot->paket_id,
+                        $op->pivot->group_id,
+                        $op->pivot->bonus_cat,
+                        $targetItem,
+                        $custTarget,
+                        $user->status,
+                        $notes
+                    ]);
+                }
                 
             }else{
                 $storeCode = '';
                 $storeName = '';
-                $totalQuantity = '';
+                //$totalQuantity = '';
                 $dateOrder = '';
-                $tiemOrder = '';
+                $timeOrder = '';
                 $custTarget = '';
-            }
 
-            array_push($rows,[
-                $user->userName,
-                $dateOrder,
-                $tiemOrder,
-                $user->UserLoc,
-                $storeCode,
-                $storeName,
-                $totalQuantity,
-                $custTarget,
-                $user->status
-            ]);
+                $storeCode = '';
+                $storeName = '';
+                //$totalQuantity = '';
+                $product_name = '';
+                $qty = '';
+                $paket_id = '';
+                $bonus_id = '';
+                $bonus_item = '';
+                $dateOrder = '';
+                $timeOrder = '';
+                $custTarget = '';
+                $targetItem = '';
+                $notes = 'Doesn\'t have record';
+                $status = '';
+                $userLoc = '';
+
+                array_push($rows,[
+                    $user->userName,
+                    $dateOrder,
+                    $timeOrder,
+                    $user->UserLoc,
+                    $storeCode,
+                    $storeName,
+                    $product_name,
+                    $qty,
+                    $paket_id,
+                    $bonus_id,
+                    $bonus_item,
+                    $targetItem,
+                    $custTarget,
+                    $status,
+                    $notes
+                ]);
+            }
         }
         return $rows;
     }
@@ -145,8 +253,14 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
             'ON/OFF Loc.',
             'Cust-Code',
             'Customer',
+            'Products',
             'Order Qty (Dus)',
-            'Total Target (Dus)',
+            'Paket Id',
+            'Bonus Id',
+            'Bonus Item',
+            'Target Item',
+            'Total Customer Target (Dus)',
+            //'Last Order',
             'Status',
             'Notes'
         ] ;
@@ -157,7 +271,7 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
         return [
             AfterSheet::class    => function(AfterSheet $event) {
    
-                $event->sheet->getDelegate()->getStyle('A1:J1')
+                $event->sheet->getDelegate()->getStyle('A1:O1')
                                 ->getFont()
                                 ->setBold(true);
                 $event->sheet->getDelegate()
@@ -169,12 +283,12 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
 
     function getOrder($id){
         $order = \App\Models\Order::with('products')->with('customers')
-								->where('id',$id)->first();;
+								->where('id',$id)->first();
         
         return $order;
     }
 
-    function getTargetItem($customerId){
+    function getTargetItem($customerId,$itemId){
         $date_now = date('Y-m-d');
         $period_par = \App\Models\Store_Targets::where('customer_id',$customerId)
                     ->where('period','<=',$date_now)
@@ -185,27 +299,42 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
                             ->first();
             if($targetStore){
                 $totalQtyTarget = $targetStore->TotalQty;
+                $targetProducts = \App\Models\ProductTarget::where('storeTargetId',$targetStore->id)
+                                ->where('productId',$itemId)
+                                ->first();
+                if($targetProducts){
+                    $targetItem = $targetProducts->quantityValues;
+                }else{
+                    $targetItem = '';
+                }
             }else{
                 $totalQtyTarget = ' ';
+                $targetItem = '';
             }
         }else{
             $totalQtyTarget = '';
+            $targetItem = '';
         }
 
-        return $totalQtyTarget;
+        return [$totalQtyTarget,$targetItem];
     }
 
     function getResumeOrder($userId,$date){
-        $order = \App\Models\Order::with('products')->with('customers')
-								->where('user_id',$userId)
+        $order = \App\Models\Order::where('user_id',$userId)
                                 ->whereNotNull('customer_id')
-                                ->whereDate('orders.created_at',$date)
-                                ->first();
+                                ->whereDate('created_at',$date)
+                                ->get();
+        if($order->count() > 0){
+            return $order;
+        }else{
+            return null;
+        }
+
         
-        return $order;
+        //return $order;
     }
 
-    function getResumeTargetItem($customerId,$date){
+    function getResumeTargetItem($customerId,$itemId,$date){
         //$client = \App\Models\Customer::findOrfail($customerId);
         $period_par = \App\Models\Store_Targets::where('customer_id',$customerId)
                     ->whereDate('period','<=',$date)
@@ -216,13 +345,23 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
                             ->first();
             if($targetStore){
                 $totalQtyTarget = $targetStore->TotalQty;
+                $targetProducts = \App\Models\ProductTarget::where('storeTargetId',$targetStore->id)
+                                ->where('productId',$itemId)
+                                ->first();
+                if($targetProducts){
+                    $targetItem = $targetProducts->quantityValues;
+                }else{
+                    $targetItem = '';
+                }
             }else{
                 $totalQtyTarget = '';
+                $targetItem = '';
             }
         }else{
             $totalQtyTarget = '';
+            $targetItem = '';
         }
 
-        return $totalQtyTarget;
+        return [$totalQtyTarget,$targetItem];
     }
 }

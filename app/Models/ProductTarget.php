@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class ProductTarget extends Model
 {
     use HasFactory;
-
+    //protected $table = 'product_targets';
     public function store_targets()
     {
     	return $this->belongsTo(Store_Targets::class,'storeTargetId');
