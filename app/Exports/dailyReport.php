@@ -67,7 +67,9 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
             $interval = DateInterval::createFromDateString('1 day');
             $period = new DatePeriod(new DateTime($begin), $interval, new DateTime($end));
             foreach ($period as $dt) {
-                
+                //dd($dt->format('Y-m-d'));
+                $day = date('l', strtotime($dt->format('Y-m-d')));
+                //dd($day);
                 $orders = $this->getResumeOrder($user->id,$dt->format('Y-m-d'));
                 if($orders){
                     foreach($orders as $odr){
@@ -100,6 +102,7 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
                                 $user->name,
                                 $dateOrder,
                                 $timeOrder,
+                                $day,
                                 $userLoc,
                                 $storeCode,
                                 $storeName,
@@ -118,6 +121,7 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
                 }else{
                         $storeCode = '';
                         $storeName = '';
+                        //$day = '';
                         //$totalQuantity = '';
                         $product_name = '';
                         $qty = '';
@@ -137,6 +141,7 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
                             $user->name,
                             $dateOrder,
                             $timeOrder,
+                            $day,
                             $userLoc,
                             $storeCode,
                             $storeName,
@@ -151,11 +156,11 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
                             $notes
                         ]);
                     }
-                }
+            }
             
         }else{
             $orders = $this->getOrder($user->orderId);
-        
+            $day = date('l', strtotime($date_now));
             //orders check
             if($orders){
                 
@@ -171,6 +176,8 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
                 }else{
                     $notes = $orders->notes;
                 }
+
+                $lastOrder = $this->lastOrder($orders->customerId,$date_now);
                 foreach($orders->products as $op){
                     [$custTarget,$targetItem] = $this->getTargetItem($user->customerId, $op->pivot->product_id);
                     $qty = $op->pivot->quantity;
@@ -184,6 +191,7 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
                         $user->userName,
                         $dateOrder,
                         $timeOrder,
+                        $day,
                         $user->UserLoc,
                         $storeCode,
                         $storeName,
@@ -195,6 +203,7 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
                         $targetItem,
                         $custTarget,
                         $user->status,
+                        $lastOrder,
                         $notes
                     ]);
                 }
@@ -222,11 +231,13 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
                 $notes = 'Doesn\'t have record';
                 $status = '';
                 $userLoc = '';
+                $lastOrder = '';
 
                 array_push($rows,[
                     $user->userName,
                     $dateOrder,
                     $timeOrder,
+                    $day,
                     $user->UserLoc,
                     $storeCode,
                     $storeName,
@@ -238,6 +249,7 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
                     $targetItem,
                     $custTarget,
                     $status,
+                    $lastOrder,
                     $notes
                 ]);
             }
@@ -246,39 +258,80 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
     }
 
     public function headings() : array {
-        return [
-            'Sales',
-            'Order Date',
-            'Order Time', 
-            'ON/OFF Loc.',
-            'Cust-Code',
-            'Customer',
-            'Products',
-            'Order Qty (Dus)',
-            'Paket Id',
-            'Bonus Id',
-            'Bonus Item',
-            'Target Item',
-            'Total Customer Target (Dus)',
-            //'Last Order',
-            'Status',
-            'Notes'
-        ] ;
+        $date_now = date('Y-m-d');
+        $today = date('w', strtotime($date_now));
+        if($today == '0'){
+            return [
+                'Sales',
+                'Order Date',
+                'Order Time',
+                'Day', 
+                'ON/OFF Loc.',
+                'Cust-Code',
+                'Customer',
+                'Products',
+                'Order Qty (Dus)',
+                'Paket Id',
+                'Bonus Id',
+                'Bonus Item',
+                'Target Item',
+                'Total Customer Target (Dus)',
+                //'Last Order',
+                'Status',
+                'Notes'
+            ] ;
+        }else{
+            return [
+                'Sales',
+                'Order Date',
+                'Order Time',
+                'Day', 
+                'ON/OFF Loc.',
+                'Cust-Code',
+                'Customer',
+                'Products',
+                'Order Qty (Dus)',
+                'Paket Id',
+                'Bonus Id',
+                'Bonus Item',
+                'Target Item',
+                'Total Customer Target (Dus)',
+                'Status',
+                'Last Order',
+                'Notes'
+            ] ;
+        }
     }
 
     public function registerEvents(): array
     {
-        return [
-            AfterSheet::class    => function(AfterSheet $event) {
-   
-                $event->sheet->getDelegate()->getStyle('A1:O1')
-                                ->getFont()
-                                ->setBold(true);
-                $event->sheet->getDelegate()
-                                ->setAutoFilter('A1:'.$event->sheet->getDelegate()->getHighestColumn().'1');
-   
-            },
-        ];
+        $date_now = date('Y-m-d');
+        $today = date('w', strtotime($date_now));
+        if($today == '0'){
+            return [
+                AfterSheet::class    => function(AfterSheet $event) {
+    
+                    $event->sheet->getDelegate()->getStyle('A1:P1')
+                                    ->getFont()
+                                    ->setBold(true);
+                    $event->sheet->getDelegate()
+                                    ->setAutoFilter('A1:'.$event->sheet->getDelegate()->getHighestColumn().'1');
+    
+                },
+            ];
+        }else{
+            return [
+                AfterSheet::class    => function(AfterSheet $event) {
+    
+                    $event->sheet->getDelegate()->getStyle('A1:Q1')
+                                    ->getFont()
+                                    ->setBold(true);
+                    $event->sheet->getDelegate()
+                                    ->setAutoFilter('A1:'.$event->sheet->getDelegate()->getHighestColumn().'1');
+    
+                },
+            ];
+        }
     }
 
     function getOrder($id){
@@ -363,5 +416,23 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
         }
 
         return [$totalQtyTarget,$targetItem];
+    }
+
+    function lastOrder($customer,$date_now){
+        $curDate = $date_now;
+        $newDate = new DateTime($curDate);
+        $lastOrder = \App\Models\Order::where('customer_id',$customer)
+                    ->where('status','!=','CANCEL')
+                    ->where('status','!=','NO-ORDER')
+                    ->orderBy('created_at','DESC')
+                    ->first();
+        if($lastOrder){
+            $date = date('Y-m-d', strtotime($lastOrder->created_at));
+            $newDate2 = new DateTime($date);
+            $jarak = $newDate->diff($newDate2)->days;
+        }else{
+            $jarak = '';
+        }
+        return $jarak;
     }
 }

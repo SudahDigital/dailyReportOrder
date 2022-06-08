@@ -21,10 +21,16 @@ class SendReportDailyController extends Controller
             $spvName = $spv->name;
             $today = date('w', strtotime($dateNow));
             if($today == '0'){
-                $begin = date('Y-m-d', strtotime('-6 day', strtotime($dateNow)));
-                $end = date('Y-m-d', strtotime('-1 day', strtotime($dateNow)));
-                $dateString = $begin.' - ' .$end;
-                \Mail::send('dailyMail',['spvName'=>$spvName,'dateString'=>$dateString], 
+                $beginDay = date('d', strtotime('-6 day', strtotime($dateNow)));
+                $beginMonth = date('F', strtotime('-6 day', strtotime($dateNow)));
+                $beginYear = date('Y', strtotime('-6 day', strtotime($dateNow)));
+
+                $endDay = date('d', strtotime('-1 day', strtotime($dateNow)));
+                $endMonth = date('F', strtotime('-1 day', strtotime($dateNow)));
+                $endYear = date('Y', strtotime('-1 day', strtotime($dateNow)));
+
+                $dateString = '('.$beginMonth.' '. $beginDay.', '.$beginYear.' until '.$endMonth.' '. $endDay.', '.$endYear.')' ;
+                \Mail::send('summaryDailyMail',['spvName'=>$spvName,'dateString'=>$dateString], 
                         function ($message) use ($spvId,$email_spv,$dateString) {
                                 $message->to($email_spv)
                                         ->cc('admin@sudahdigital.com')
@@ -38,7 +44,7 @@ class SendReportDailyController extends Controller
                                 );
                         });
             }else{
-                $dateString = date('d F Y', strtotime($dateNow));
+                $dateString = date('F d, Y', strtotime($dateNow));
                 \Mail::send('dailyMail',['spvName'=>$spvName,'dateString'=>$dateString], 
                             function ($message) use ($spvId,$email_spv,$dateString) {
                                     $message->to($email_spv)
