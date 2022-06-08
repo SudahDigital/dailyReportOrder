@@ -177,7 +177,7 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
                     $notes = $orders->notes;
                 }
 
-                $lastOrder = $this->lastOrder($orders->customerId,$date_now);
+                $lastOrder = $this->lastOrder($orders->customer_id,$date_now);
                 foreach($orders->products as $op){
                     [$custTarget,$targetItem] = $this->getTargetItem($user->customerId, $op->pivot->product_id);
                     $qty = $op->pivot->quantity;
@@ -297,7 +297,7 @@ class dailyReport implements FromCollection, WithMapping, WithHeadings, WithEven
                 'Target Item',
                 'Total Customer Target (Dus)',
                 'Status',
-                'Last Order',
+                'Last Order (Day)',
                 'Notes'
             ] ;
         }
